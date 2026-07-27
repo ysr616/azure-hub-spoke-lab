@@ -75,7 +75,7 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 | NSG | `web-nsg` | `web-subnet` | ✅ Done |
 | Linux VM | `web-server-01` | `10.1.1.0/24` | ✅ Done |
 | Nginx Web Server | — | `web-server-01` | ✅ Done |
-| Azure Bastion | `hub-bastion` | `AzureBastionSubnet` | 🔜 Day 3 |
+| Azure Bastion | `hub-bastion` | `AzureBastionSubnet` | ✅ Done  |
 | Route Tables (UDR) | `spoke-udr` | Both spokes | 🔜 Day 4 |
 | Azure Firewall | `hub-firewall` | `AzureFirewallSubnet` | 🔜 Day 5 |
 | Application Gateway | `hub-appgw` | `AppGatewaySubnet` | 🔜 Day 6 |
@@ -90,7 +90,7 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 |---|---|---|
 | Day 1 | Hub-Spoke VNet foundation + VNet Peering | ✅ Complete |
 | Day 2 | NSG + Linux VM + Nginx Web Server | ✅ Complete |
-| Day 3 | Azure Bastion + Zero-Trust Access (remove public IPs) | 🔜 Pending |
+| Day 3 | Azure Bastion + Zero-Trust Access (remove public IPs) | ✅ Complete |
 | Day 4 | Route Tables (UDR) + Forced Tunneling | 🔜 Pending |
 | Day 5 | Azure Firewall Basic — spoke-to-spoke inspection | 🔜 Pending |
 | Day 6 | Application Gateway — inbound traffic management | 🔜 Pending |
@@ -142,6 +142,26 @@ Gateway transit requires an actual VPN Gateway or Route Server to exist — it c
 
 ---
 
+
+### ✅ Day 3 — Azure Bastion + Zero-Trust Access
+
+**Goal:** Deploy Bastion in the hub, remove VM public IP, validate secure browser-based access with no internet exposure on the VM.
+
+**What was built:**
+- Azure Bastion Basic deployed in `AzureBastionSubnet` of `hub-vnet`
+- Public IP removed from `web-server-01` — VM now private-only (`10.1.1.4`)
+- Bastion browser terminal confirmed working from company laptop
+- Nginx confirmed still running internally via `curl http://localhost`
+
+**Key learnings:**
+- Removing public IP from VM does not affect internal service operation — Nginx keeps running, only direct internet access is blocked
+- Bastion connects via private VNet path through the hub — VM must be in **Running** state or connection times out
+- Self-diagnosed VM deallocated state by checking Azure mobile app independently — started VM from mobile, Bastion session on laptop connected without re-entering credentials
+- Always verify VM Running state before starting Bastion session (auto-shutdown awareness)
+
+**Screenshots:** [Day 3 folder](./screenshots/day3/)
+
+---
 ## 💡 Key Concepts Demonstrated
 
 ### NSG — Two Levels of Enforcement
