@@ -76,10 +76,10 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 | Linux VM | `web-server-01` | `10.1.1.0/24` | ✅ Done |
 | Nginx Web Server | — | `web-server-01` | ✅ Done |
 | Azure Bastion | `hub-bastion` | `AzureBastionSubnet` | ✅ Done  |
-| Route Tables (UDR) | `spoke-udr` | Both spokes | 🔜 Day 4 |
-| Azure Firewall | `hub-firewall` | `AzureFirewallSubnet` | 🔜 Day 5 |
-| Application Gateway | `hub-appgw` | `AppGatewaySubnet` | 🔜 Day 6 |
-| Azure DNS | `lab-private-dns` | Private Zone | 🔜 Day 7 |
+| Route Tables (UDR) | `spoke1-udr`, `spoke2-udr` | Both spokes | ✅ Done  |
+| Azure Firewall | `hub-firewall` | `AzureFirewallSubnet` | ✅ Done  |
+| Application Gateway | `hub-appgw` | `AppGatewaySubnet` | ✅ Done  |
+| Azure DNS | `stewart-lab.internal` | Private Zone | ✅ Done  |
 | Azure Monitor | `lab-monitor` | Log Analytics | 🔜 Day 8 |
 
 ---
@@ -91,10 +91,10 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 | Day 1 | Hub-Spoke VNet foundation + VNet Peering | ✅ Complete |
 | Day 2 | NSG + Linux VM + Nginx Web Server | ✅ Complete |
 | Day 3 | Azure Bastion + Zero-Trust Access (remove public IPs) | ✅ Complete |
-| Day 4 | Route Tables (UDR) + Forced Tunneling | 🔜 Pending |
-| Day 5 | Azure Firewall Basic — spoke-to-spoke inspection | 🔜 Pending |
-| Day 6 | Application Gateway — inbound traffic management | 🔜 Pending |
-| Day 7 | Azure DNS Private Zone + Traffic Manager | 🔜 Pending |
+| Day 4 | Route Tables (UDR) + Forced Tunneling | ✅ Complete |
+| Day 5 | Azure Firewall Basic — spoke-to-spoke inspection | ✅ Complete |
+| Day 6 | Application Gateway — inbound traffic management | ✅ Complete |
+| Day 7 | Azure Private DNS + Portfolio Page Deployment | ✅ Complete |
 | Day 8 | Azure Monitor + Network Watcher + Alerts | 🔜 Pending |
 | Day 9 | GitHub documentation + architecture diagrams | 🔜 Pending |
 | Day 10 | AZ-104 alignment review + buffer | 🔜 Pending |
@@ -160,6 +160,81 @@ Gateway transit requires an actual VPN Gateway or Route Server to exist — it c
 - Always verify VM Running state before starting Bastion session (auto-shutdown awareness)
 
 **Screenshots:** [Day 3 folder](./screenshots/day3/)
+
+---
+
+### ✅ Day 4 — Route Tables (UDR)
+**Goal:** Force all spoke traffic through the hub firewall position using User Defined Routes.
+
+**What was built:**
+- `spoke1-udr` — routes `0.0.0.0/0` and `10.2.0.0/16` → next hop `10.0.1.4`
+- `spoke2-udr` — routes `0.0.0.0/0` and `10.1.0.0/16` → next hop `10.0.1.4`
+- Both UDRs associated to respective spoke subnets
+- Network Watcher Next Hop verified: result = VirtualAppliance → 10.0.1.4
+
+**Key learning:**
+UDRs override Azure's default system routes. Without them, spoke traffic bypasses the firewall completely. With them, every packet is directed to the hub inspection layer — even before the firewall exists.
+
+**Screenshots:** [Day 4 folder](./screenshots/day4/)
+
+---
+
+### ✅ Day 5 — Azure Firewall (Hub Inspection Layer)
+**Goal:** Deploy Azure Firewall Basic in the hub, activate the UDR routing, verify all traffic is inspected.
+
+**What was built:**
+- `AzureFirewallManagementSubnet` (10.0.4.0/24) added to hub-vnet (required by Basic SKU)
+- Azure Firewall Basic deployed at private IP `10.0.1.4` — exactly where UDRs pointed
+- Network rule collection allowing spoke-to-spoke and internet outbound
+- Application rule collection allowing http/https to all FQDNs
+
+**Key learnings:**
+- Azure Firewall Basic requires `AzureFirewallManagementSubnet` — must be pre-created
+- UDRs from Day 4 activated instantly when firewall deployed into `10.0.1.4`
+- Network Watcher Next Hop changed from **None** → **VirtualAppliance** confirming live inspection
+- Verified with `curl http://google.com` from VM via Bastion — got `301 Moved` response through firewall
+
+**Screenshots:** [Day 5 folder](./screenshots/day5/)
+
+---
+
+### ✅ Day 6 — Application Gateway
+**Goal:** Deploy App Gateway v2 in hub, route inbound web traffic to VM via private IP.
+
+**What was built:**
+- `AppGatewaySubnet` (10.0.5.0/24) added to hub-vnet — with NO route table attached
+- `hub-appgw` Standard V2 deployed with backend pool pointing to `10.1.1.4`
+- `appgw-nsg` with GatewayManager, HTTP, and AzureLoadBalancer rules
+- Backend health confirmed: **Healthy — 200 status code**
+- End-to-end verified via Cloud Shell curl: `HTTP/1.1 200 OK, Server: nginx`
+
+**Key learnings:**
+- App Gateway v2 subnet must have NO UDR — breaks management plane if route table attached
+- Free subscription public IP quota is 3 — Bastion deleted to free slot for App GW PIP
+- Mobile carrier blocking port 80 confirmed as local network issue — not Azure config
+- Cloud Shell is the definitive test tool for Azure-to-Azure connectivity verification
+
+**Screenshots:** [Day 6 folder](./screenshots/day6/)
+
+---
+
+### ✅ Day 7 — Azure Private DNS + Portfolio Page
+**Goal:** Deploy private DNS zone for internal name resolution, replace placeholder with live portfolio page.
+
+**What was built:**
+- Private DNS zone `stewart-lab.internal` linked to all 3 VNets
+- Auto-registration enabled on spoke1 and spoke2 VNet links
+- A record: `web.stewart-lab.internal` → `10.1.1.4`
+- Professional portfolio page deployed via `az vm run-command` — no SSH needed
+- DNS verified: `nslookup web.stewart-lab.internal` → `10.1.1.4` ✅
+- Portfolio page live at `http://20.233.190.55` through full App GW → Firewall → VM chain
+
+**Key learnings:**
+- Azure VMs use `168.63.129.16` as DNS resolver — automatically returns private zone records when zone is linked to VNet
+- Auto-registration creates VM hostname records automatically — no manual maintenance
+- `az vm run-command` is a powerful alternative to Bastion for pushing files to VMs
+
+**Screenshots:** [Day 7 folder](./screenshots/day7/)
 
 ---
 ## 💡 Key Concepts Demonstrated
