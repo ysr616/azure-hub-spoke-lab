@@ -7,6 +7,11 @@
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-yasirmunir-blue)](https://www.linkedin.com/in/yasirmunir)
 
+
+## 🚀 Deploy This Lab
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fysr616%2Fazure-hub-spoke-lab%2Fmain%2Fdeploy%2Ftemplate.json)
+
 ---
 
 ## 📋 Overview
