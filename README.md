@@ -3,14 +3,9 @@
 
 **Author:** Yasir Munir | NOC Engineer II | Stewart Title  
 **Skills Demonstrated:** Azure Networking | SD-WAN | Meraki | Hub-Spoke Design | Zero-Trust Access  
-**Lab Duration:** 10 Days | **Region:** UAE North | **Status:** 🟡 In Progress
+**Lab Duration:** 10 Days | **Region:** UAE North | **Status:** ✅ Complete
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-yasirmunir-blue)](https://www.linkedin.com/in/yasirmunir)
-
-
-## 🚀 Deploy This Lab
-
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fysr616%2Fazure-hub-spoke-lab%2Fmain%2Fdeploy%2Ftemplate.json)
 
 ---
 
@@ -78,14 +73,14 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 | Spoke 2 VNet | `spoke2-vnet` | `10.2.0.0/16` | ✅ Done |
 | VNet Peering | hub↔spoke1, hub↔spoke2 | — | ✅ Done |
 | NSG | `web-nsg` | `web-subnet` | ✅ Done |
-| Linux VM | `web-server-01` | `10.1.1.0/24` | ✅ Done |
+| Linux VM | `web-server-02` | `10.1.1.0/24` | ✅ Done |
 | Nginx Web Server | — | `web-server-01` | ✅ Done |
 | Azure Bastion | `hub-bastion` | `AzureBastionSubnet` | ✅ Done  |
 | Route Tables (UDR) | `spoke1-udr`, `spoke2-udr` | Both spokes | ✅ Done  |
 | Azure Firewall | `hub-firewall` | `AzureFirewallSubnet` | ✅ Done  |
 | Application Gateway | `hub-appgw` | `AppGatewaySubnet` | ✅ Done  |
 | Azure DNS | `stewart-lab.internal` | Private Zone | ✅ Done  |
-| Azure Monitor | `lab-monitor` | Log Analytics | 🔜 Day 8 |
+| Azure Monitor | `hub-log-analytics` | Log Analytics | ✅ Done  |
 
 ---
 
@@ -100,9 +95,9 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 | Day 5 | Azure Firewall Basic — spoke-to-spoke inspection | ✅ Complete |
 | Day 6 | Application Gateway — inbound traffic management | ✅ Complete |
 | Day 7 | Azure Private DNS + Portfolio Page Deployment | ✅ Complete |
-| Day 8 | Azure Monitor + Network Watcher + Alerts | 🔜 Pending |
-| Day 9 | GitHub documentation + architecture diagrams | 🔜 Pending |
-| Day 10 | AZ-104 alignment review + buffer | 🔜 Pending |
+| Day 8 | Azure Monitor + Network Watcher + Alerts | ✅ Complete |
+| Day 9 | GitHub documentation + architecture diagrams | ✅ Complete |
+| Day 10 | AZ-104 alignment review + buffer | ✅ Complete |
 
 ---
 
@@ -240,6 +235,39 @@ UDRs override Azure's default system routes. Without them, spoke traffic bypasse
 - `az vm run-command` is a powerful alternative to Bastion for pushing files to VMs
 
 **Screenshots:** [Day 7 folder](./screenshots/day7/)
+
+---
+
+### ✅ Day 8 — Azure Monitor + Network Watcher
+**Goal:** Build full observability — firewall logs, App Gateway access logs, VM alerting, synthetic connectivity testing.
+
+**What was built:**
+- `hub-log-analytics` Log Analytics workspace — central log hub
+- Diagnostic settings on Firewall and App Gateway → flowing to Log Analytics
+- Connection Monitor `spoke-connectivity-monitor` — HTTP test every 30 seconds
+- CPU alert `web-server-high-cpu` → Action Group → email notification
+- KQL queries verified firewall and App Gateway log ingestion
+
+**Key troubleshooting — Connection Monitor false failure:**
+Initial test to `8.8.8.8:80` showed 100% failed — correctly diagnosed as protocol mismatch (DNS server doesn't serve HTTP). Added `www.google.com:80` as destination → 0% failed, confirmed firewall allowing FQDN-based outbound traffic correctly.
+
+**NOC parallel:** Connection Monitor = ThousandEyes | Log Analytics = SolarWinds/LogicMonitor | Azure Monitor Alerts = LogicMonitor alerting
+
+**Screenshots:** [Day 8 folder](./screenshots/day8/)
+
+---
+
+### ✅ Day 9 & 10 — Lab Complete + AZ-104 Alignment
+**Goal:** Final documentation, architecture review, AZ-104 exam domain mapping.
+
+**Lab status:** All 10 days complete. Full hub-spoke enterprise network deployed, documented, and portfolio page live.
+
+**AZ-104 domains covered:**
+- Implement and Manage Virtual Networking (25-30%) — VNets, peering, NSG, Firewall, UDR, DNS
+- Monitor and Maintain Azure Resources (10-15%) — Log Analytics, alerts, Network Watcher
+- Deploy and Manage Compute Resources (20-25%) — VM deployment, networking, extensions
+
+**See full AZ-104 alignment:** [docs/day9-day10-completion.md](./docs/day9-day10-completion.md)
 
 ---
 ## 💡 Key Concepts Demonstrated
