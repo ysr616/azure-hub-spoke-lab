@@ -23,6 +23,10 @@ This lab mirrors a real enterprise Azure greenfield deployment — modeled after
 
 ## 🏗️ Architecture
 
+# Azure Hub-Spoke Network Lab
+
+![Lab Architecture](diagrams/architecture.png)
+
 ```
                     ┌─────────────────────────────────┐
                     │           Hub VNet               │
